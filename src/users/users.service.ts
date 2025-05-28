@@ -12,16 +12,15 @@ export class UsersService {
     });
   }
   async createUser(data: { email: string, password: string, first_name: string, last_name: string }) {
-    const hashedPassword = await bcrypt.hash(data.password, 10);
     return this.prisma.user.create({
       data: {
         email: data.email,
-        password: hashedPassword,
+        password: data.password, // ALREADY hashed
         first_name: data.first_name,
         last_name: data.last_name,
         role: 'USER',
         balance: 0,
-      },
+      }
     });
   }
   async findById(id: string) {
