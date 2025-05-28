@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({
@@ -24,4 +24,20 @@ export class UsersService {
       },
     });
   }
+  async findById(id: string) {
+    return this.prisma.user.findUnique({
+      where: { id },
+    });
+  }
+
+  async updateUser(id: string, data: Partial<any>) {
+    const user = await this.findById(id);
+    if (!user) throw new Error('User not found');
+
+    return this.prisma.user.update({
+      where: { id },
+      data,
+    });
+  }
+
 }
