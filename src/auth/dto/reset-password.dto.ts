@@ -1,10 +1,10 @@
 // dto/reset-password.dto.ts
-import { IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ResetPasswordDto {
-  @IsString()
+  @ApiProperty({ example: 'some-random-reset-token' })
   token: string;
 
-  @IsString()
+  @ApiProperty({ example: 'newStrongPassword!' })
   newPassword: string;
 }
