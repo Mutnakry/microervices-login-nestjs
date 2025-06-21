@@ -5,6 +5,10 @@ import appConfig from './config/app.config';
 import { validationSchema } from './config/validation';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { TenantModule } from './tenant/tenant.module';
+import { BannerModule } from './banner/banner.module';
+import { AnnouncementModule  } from './announcement/announcement.module';
+import { SeoModule } from './seo/seo.module';
 
 
 @Module({
@@ -16,6 +20,10 @@ import { AuthModule } from './auth/auth.module';
     }),
     UsersModule,
     AuthModule,
+    BannerModule ,
+    TenantModule,
+    AnnouncementModule ,
+    SeoModule,
   ],
 })
 export class AppModule {}

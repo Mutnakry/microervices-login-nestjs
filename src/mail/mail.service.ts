@@ -32,4 +32,8 @@ export class MailService {
 
     console.log(`✅ OTP email sent to ${to}`);
   }
+   async sendVerificationEmail(email: string, link: string) {
+    console.log(`📧 Sending verification email to ${email}`);
+    console.log(`🔗 Link: ${link}`);
+  }
 }
