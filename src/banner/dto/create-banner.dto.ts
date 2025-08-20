@@ -1,23 +1,28 @@
-// src/banner/dto/create-banner.dto.ts
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsUrl, IsBoolean } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsOptional, IsEnum, IsUrl, IsBoolean } from 'class-validator';
+import { BannerPosition } from '@prisma/client';
 
 export class CreateBannerDto {
-  @ApiProperty()
+  @ApiProperty({ example: 'Homepage Banner' })
   @IsString()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'https://example.com/banner.jpg' })
   @IsUrl()
   imageUrl: string;
 
-  @ApiProperty({ required: false })
+  @ApiPropertyOptional({ example: 'https://example.com' })
   @IsOptional()
   @IsUrl()
   linkUrl?: string;
 
-  @ApiProperty({ default: true })
+  @ApiPropertyOptional({ default: true })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({ enum: BannerPosition, default: BannerPosition.TOP })
+  @IsOptional()
+  @IsEnum(BannerPosition)
+  position?: BannerPosition;
 }
