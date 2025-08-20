@@ -1,13 +1,20 @@
 // src/banner/banner.controller.ts
 import {
   Controller, Get, Post, Body, Patch, Param, Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { BannerService } from './banner.service';
 import { CreateBannerDto } from './dto/create-banner.dto';
 import { UpdateBannerDto } from './dto/update-banner.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from '@prisma/client';
+import { RolesGuard } from 'src/auth/roles.guard';
 
 @ApiTags('banners')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN)
 @Controller('banners')
 export class BannerController {
   constructor(private readonly bannerService: BannerService) {}

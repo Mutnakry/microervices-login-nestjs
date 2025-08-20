@@ -10,6 +10,7 @@ import { MailService } from '../mail/mail.service';
 import { Request } from 'express';
 import * as speakeasy from 'speakeasy';
 import * as qrcode from 'qrcode';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -59,7 +60,7 @@ export class AuthService {
     return { message: 'Session revoked successfully' };
   }
   // Log session on login
-  async login(email: string, password: string, req?: Request) {
+  async login11(email: string, password: string, req?: Request) {
     const user = await this.validateUser(email, password);
 
     // If MFA is enabled, require OTP verification first
@@ -99,6 +100,64 @@ export class AuthService {
     });
 
     return { access_token, refresh_token, user };
+  }
+
+  async login(email: string, password: string, req?: Request) {
+    const user = await this.validateUser(email, password);
+
+    // If MFA is enabled, require OTP verification first
+    if (user.mfaSecret) {
+      return {
+        requiresMfa: true,
+        message: 'MFA is enabled. Please verify using your TOTP code.',
+      };
+    }
+
+    // ✅ INCLUDE ROLE in the JWT payload
+    const payload = { sub: user.id, email: user.email, role: user.role as Role };
+
+    // (optional) shorter access token, separate secret for refresh
+    const access_token = await this.jwtService.signAsync(payload, {
+      expiresIn: '15m',
+    });
+
+    const refresh_token = await this.jwtService.signAsync(
+      { sub: user.id, tokenType: 'refresh' }, // minimal payload for refresh
+      {
+        secret: process.env.JWT_REFRESH_SECRET ?? process.env.JWT_SECRET,
+        expiresIn: '7d',
+      },
+    );
+
+    // Store hashed refresh token
+    const hashed = await bcrypt.hash(refresh_token, 10);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken: hashed },
+    });
+
+    // ✅ Extract and normalize IP (first x-forwarded-for, else socket)
+    let rawIp =
+      (req?.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+      req?.ip ||
+      req?.socket?.remoteAddress ||
+      'unknown';
+    if (rawIp === '::1') rawIp = '127.0.0.1';
+
+    const userAgent = req?.headers['user-agent'] || 'unknown';
+
+    await this.prisma.session.create({
+      data: {
+        userId: user.id,
+        ipAddress: rawIp,
+        userAgent,
+      },
+    });
+
+    // Optional: strip sensitive fields before returning user
+    const { password: _pw, refreshToken: _rt, ...publicUser } = user as any;
+
+    return { access_token, refresh_token, user: publicUser };
   }
 
   async verifyMfaLogin(email: string, otp: string, req?: Request) {
@@ -266,7 +325,7 @@ export class AuthService {
           email,
           first_name,
           last_name,
-          role: 'user',
+          role: 'USER',
           password: 'google-oauth', // dummy password, not used
         },
       });
@@ -293,7 +352,7 @@ export class AuthService {
           first_name,
           last_name,
           password: fakePassword,
-          role: 'user',
+          role: 'USER',
         },
       });
     }
@@ -312,7 +371,7 @@ export class AuthService {
     });
     return { message: 'Logged out successfully' };
   }
-  
+
   async refreshTokens(userId: string, refreshToken: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.refreshToken) throw new UnauthorizedException();

@@ -24,12 +24,16 @@ import { JwtAuthGuard } from './jwt.guard';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
+import { Roles } from './roles.decorator';
+import { Role } from '@prisma/client';
 @ApiTags('auth')
+// @UseGuards(JwtAuthGuard)
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) { }
 
   @Post('register')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 400, description: 'Email already exists' })

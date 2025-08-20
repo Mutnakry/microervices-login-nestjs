@@ -14,7 +14,7 @@ model User {
   refreshToken String?
   first_name   String
   last_name    String
-  role         String   @default("USER")
+  role         Role     @default(USER)
   balance      Decimal  @default(0.0)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
@@ -37,6 +37,11 @@ model User {
 
   // ✅ Device Sessions
   sessions Session[]
+}
+
+enum Role {
+  USER
+  ADMIN
 }
 
 model Session {
